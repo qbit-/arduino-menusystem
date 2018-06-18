@@ -1,13 +1,13 @@
 {
-  "name": "arduino-menusystem",
+  "name": "mbed-menusystem",
   "keywords": "display, menu",
-  "description": "Arduino library for implementing a menu system",
+  "description": "Arduino/MBED library for implementing a menu system. Ported with minimal changes from jonblack's arduino-menusystem",
   "repository":
   {
     "type": "git",
-    "url": "https://github.com/jonblack/arduino-menusystem.git"
+    "url": "https://github.com/qbit-/arduino-menusystem.git"
   },
   "version": "3.0.0",
-  "frameworks": "mbed", 
-  "platforms": "atmelavr"
+    "frameworks": "mbed", 
+  "platforms": "*"
 }

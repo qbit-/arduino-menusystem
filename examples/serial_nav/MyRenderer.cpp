@@ -1,29 +1,32 @@
 #include "MyRenderer.h"
 
+// Serial terminal
+extern Serial pc;
+
 void MyRenderer::render(Menu const& menu) const {
-    Serial.print("\nCurrent menu name: ");
-    Serial.println(menu.get_name());
-    String buffer;
+    pc.printf("%s", "\nCurrent menu name: ");
+    pc.printf("%s\n", menu.get_name());
+    string buffer;
     for (int i = 0; i < menu.get_num_components(); ++i) {
         MenuComponent const* cp_m_comp = menu.get_menu_component(i);
         cp_m_comp->render(*this);
 
         if (cp_m_comp->is_current())
-            Serial.print("<<< ");
-        Serial.println("");
+            pc.printf("%s", "<<< ");
+        pc.printf("%s\n", "");
     }
 }
 
 void MyRenderer::render_menu_item(MenuItem const& menu_item) const {
-    Serial.print(menu_item.get_name());
+    pc.printf("%s", menu_item.get_name());
 }
 
 void MyRenderer::render_back_menu_item(BackMenuItem const& menu_item) const {
-    Serial.print(menu_item.get_name());
+    pc.printf("%s", menu_item.get_name());
 }
 
 void MyRenderer::render_numeric_menu_item(NumericMenuItem const& menu_item) const {
-    String buffer;
+    string buffer;
 
     buffer = menu_item.get_name();
     buffer += menu_item.has_focus() ? '<' : '=';
@@ -32,7 +35,7 @@ void MyRenderer::render_numeric_menu_item(NumericMenuItem const& menu_item) cons
     if (menu_item.has_focus())
         buffer += '>';
 
-    Serial.print(buffer);
+    pc.printf("%s", buffer);
 }
 
 void MyRenderer::render_custom_numeric_menu_item(CustomNumericMenuItem const& menu_item) const {
@@ -40,7 +43,7 @@ void MyRenderer::render_custom_numeric_menu_item(CustomNumericMenuItem const& me
     if (menu_item.has_focus()) {
         // Only display the ASCII graphics in edit mode.
 
-        String buffer;
+        string buffer;
 
         // make room for a ' ' at the end and the terminating 0
         char graphics[menu_item.get_width() + 2];
@@ -61,7 +64,7 @@ void MyRenderer::render_custom_numeric_menu_item(CustomNumericMenuItem const& me
 
         buffer += menu_item.get_value();
 
-        Serial.println(buffer);
+        pc.printf("%s\n", buffer);
     } else {
         // Non edit mode: Let parent class handle this
         return render_numeric_menu_item(menu_item);
@@ -69,5 +72,5 @@ void MyRenderer::render_custom_numeric_menu_item(CustomNumericMenuItem const& me
 }
 
 void MyRenderer::render_menu(Menu const& menu) const {
-    Serial.print(menu.get_name());
+    pc.printf("%s", menu.get_name());
 }

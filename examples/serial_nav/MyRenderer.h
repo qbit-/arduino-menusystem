@@ -10,6 +10,11 @@
 #ifndef _MY_RENDERER_H
 #define _MY_RENDERER_H
 
+#include <mbed.h>
+#include <stdio.h>
+#include <string.h>
+using namespace std;
+
 #include <MenuSystem.h>
 #include "CustomNumericMenuItem.h"
 
