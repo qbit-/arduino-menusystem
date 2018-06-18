@@ -8,6 +8,6 @@
     "url": "https://github.com/jonblack/arduino-menusystem.git"
   },
   "version": "3.0.0",
-  "frameworks": "arduino",
+  "frameworks": "mbed", 
   "platforms": "atmelavr"
 }

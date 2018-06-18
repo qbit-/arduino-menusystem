@@ -6,11 +6,8 @@
 #ifndef MENUSYSTEM_H
 #define MENUSYSTEM_H
 
-#if defined(ARDUINO) && ARDUINO >= 100
-  #include <Arduino.h>
-#else
-  #include <WProgram.h>
-#endif
+#include <string> 
+using namespace std;
 
 class Menu;
 class MenuComponentRenderer;
@@ -236,11 +233,11 @@ protected:
 
 class NumericMenuItem : public MenuItem {
 public:
-    //! \brief Callback for formatting the numeric value into a String.
+    //! \brief Callback for formatting the numeric value into a string.
     //!
     //! \param value The value to convert.
-    //! \returns The String representation of value.
-    using FormatValueFnPtr = const String (*)(const float value);
+    //! \returns The string representation of value.
+  using FormatValueFnPtr = const string (*)(const float value);
 
 public:
     //! Constructor
@@ -251,7 +248,7 @@ public:
     //! @param min_value The minimum value.
     //! @param max_value The maximum value.
     //! @param increment How much the value should be incremented by.
-    //! @param format_value_fn The custom formatter. If nullptr the String
+    //! @param format_value_fn The custom formatter. If nullptr the string
     //!                        float formatter will be used.
     NumericMenuItem(const char* name, SelectFnPtr select_fn,
                     float value, float min_value, float max_value,
@@ -261,7 +258,7 @@ public:
     //!
     //! \brief Sets the custom number formatter.
     //!
-    //! \param numberFormat the custom formatter. If nullptr the String float
+    //! \param numberFormat the custom formatter. If nullptr the string float
     //!                     formatter will be used (2 decimals)
     //!
     void set_number_formatter(FormatValueFnPtr format_value_fn);
@@ -274,7 +271,7 @@ public:
     void set_min_value(float value);
     void set_max_value(float value);
 
-    String get_formatted_value() const;
+    string get_formatted_value() const;
 
     virtual void render(MenuComponentRenderer const& renderer) const;
 

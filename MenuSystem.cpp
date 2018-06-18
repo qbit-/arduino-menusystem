@@ -5,6 +5,8 @@
 
 #include "MenuSystem.h"
 #include <stdlib.h>
+#include <string> 
+using namespace std;
 
 
 // *********************************************************
@@ -304,8 +306,8 @@ float NumericMenuItem::get_max_value() const {
     return _max_value;
 }
 
-String NumericMenuItem::get_formatted_value() const {
-    String buffer;
+string NumericMenuItem::get_formatted_value() const {
+    string buffer;
     if (_format_value_fn != nullptr)
         buffer += _format_value_fn(_value);
     else
