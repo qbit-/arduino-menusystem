@@ -162,5 +162,7 @@ void setup() {
 
 int main() {
   setup();
-  serial_handler();
+  while(true){
+    serial_handler();
+  }
 }

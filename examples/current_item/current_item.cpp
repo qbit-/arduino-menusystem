@@ -2,7 +2,7 @@
  * current_item.cpp - Example code using the menu system library.
  * ported to mbed from the original current_item.ino file
  *
- * This example shows only the current menu item.
+ * This example shows only one (the current) menu item at a time.
  *
  * Copyright (c) 2015 arduino-menusystem
  * Licensed under the MIT license (see LICENSE)
@@ -95,11 +95,13 @@ void setup() {
 
 int main() {
   setup();
-  ms.display();
-  ms.select();
-  if (bRanCallback) {
-    ms.next();
-    bRanCallback = false;
+  while(true){
+    ms.display();
+    ms.select();
+    if (bRanCallback) {
+      ms.next();
+      bRanCallback = false;
+    }
+    wait_ms(2000);
   }
-  wait_ms(2000);
 }

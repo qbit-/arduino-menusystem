@@ -92,16 +92,18 @@ void setup() {
 
 int main() {
   setup();
-  ms.display();
+  while(true){
+    ms.display();
   
-  // Simulate using the menu by walking over the entire structure.
-  ms.select();
-  ms.next();
+    // Simulate using the menu by walking over the entire structure.
+    ms.select();
+    ms.next();
   
-  if (done) {
-    ms.reset();
-    done = false;
+    if (done) {
+      ms.reset();
+      done = false;
+    }
+  
+    wait_ms(2000);
   }
-  
-  wait_ms(2000);
 }
