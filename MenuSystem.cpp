@@ -353,8 +353,8 @@ bool NumericMenuItem::prev(bool loop) {
 // MenuSystem
 // *********************************************************
 
-MenuSystem::MenuSystem(MenuComponentRenderer const& renderer)
-: _p_root_menu(new Menu("", nullptr)),
+MenuSystem::MenuSystem(MenuComponentRenderer const& renderer, const char* name)
+: _p_root_menu(new Menu(name, nullptr)),
   _p_curr_menu(_p_root_menu),
   _renderer(renderer) {
 }
@@ -389,13 +389,19 @@ void MenuSystem::select(bool reset) {
 }
 
 bool MenuSystem::back() {
-    if (_p_curr_menu != _p_root_menu) {
-        _p_curr_menu = const_cast<Menu*>(_p_curr_menu->get_parent());
-        return true;
-    }
+  // Deactivate current component if it has focus
+  if (_p_curr_menu->_p_current_component->has_focus()){
+      _p_curr_menu->_p_current_component->_has_focus = false;
+      return true;
+  }
+  // Go 1 level up if no component was active
+  if (_p_curr_menu != _p_root_menu) {
+    _p_curr_menu = const_cast<Menu*>(_p_curr_menu->get_parent());
+    return true;
+  }
 
-    // We are already in the root menu
-    return false;
+  // We are already in the root menu
+  return false;
 }
 
 Menu& MenuSystem::get_root_menu() const {
