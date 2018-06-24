@@ -194,6 +194,12 @@ public:
     //! \copydoc MenuComponent::render
     virtual void render(MenuComponentRenderer const& renderer) const;
 
+    //! \copydoc Menu:set_parent
+    void set_parent(Menu* p_parent);
+
+    //! \copydoc Menu:set_parent
+    Menu const* get_parent() const;
+
 protected:
     //! \copydoc MenuComponent::next
     //!
@@ -212,6 +218,9 @@ protected:
 
     //! \copydoc MenuComponent:select
     virtual Menu* select();
+
+private:
+    Menu* _p_parent;
 };
 
 

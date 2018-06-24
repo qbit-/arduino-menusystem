@@ -144,6 +144,7 @@ void Menu::reset() {
 
 void Menu::add_item(MenuItem* p_item) {
     add_component((MenuComponent*) p_item);
+    p_item->set_parent(this);
 }
 
 void Menu::add_menu(Menu* p_menu) {
@@ -253,6 +254,14 @@ bool MenuItem::next(bool loop) {
 
 bool MenuItem::prev(bool loop) {
     return false;
+}
+
+Menu const* MenuItem::get_parent() const {
+    return _p_parent;
+}
+
+void MenuItem::set_parent(Menu* p_parent) {
+    _p_parent = p_parent;
 }
 
 // *********************************************************
@@ -395,7 +404,9 @@ bool MenuSystem::back() {
       return true;
   }
   // Go 1 level up if no component was active
-  if (_p_curr_menu != _p_root_menu) {
+  // and reset current menu
+  if (_p_curr_menu != _p_root_menu){
+    _p_curr_menu->reset();
     _p_curr_menu = const_cast<Menu*>(_p_curr_menu->get_parent());
     return true;
   }
