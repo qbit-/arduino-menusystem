@@ -32,6 +32,10 @@ bool MenuComponent::has_focus() const {
     return _has_focus;
 }
 
+void MenuComponent::set_focus(bool has_focus) {
+  _has_focus = has_focus;
+}
+
 bool MenuComponent::is_current() const {
     return _is_current;
 }
@@ -114,7 +118,7 @@ bool Menu::prev(bool loop) {
     return false;
 }
 
-Menu* Menu::activate() {
+Menu* Menu::activate_menucomponent() {
     if (!_num_components)
         return nullptr;
 
@@ -128,18 +132,18 @@ Menu* Menu::activate() {
 
 Menu* Menu::select() {
     MenuComponent::select();
+    this->set_focus(true);
     return this;
 }
 
 void Menu::reset() {
-    for (int i = 0; i < _num_components; ++i)
-        _menu_components[i]->reset();
-
-    _p_current_component->set_current(false);
-    _previous_component_num = 0;
-    _current_component_num = 0;
-    _p_current_component = _num_components ? _menu_components[0] : nullptr;
-    _p_current_component->set_current();
+  // Makes first menuitem current
+  _p_current_component->set_current(false);
+  _p_current_component->set_focus(false);
+  _previous_component_num = 0;
+  _current_component_num = 0;
+  _p_current_component = _num_components ? _menu_components[0] : nullptr;
+  _p_current_component->set_current();
 }
 
 void Menu::add_item(MenuItem* p_item) {
@@ -236,8 +240,9 @@ MenuItem::MenuItem(const char* name, SelectFnPtr select_fn)
 }
 
 Menu* MenuItem::select() {
-    MenuComponent::select();
-    return nullptr;
+  // call attached function
+  MenuComponent::select();
+  return nullptr;
 }
 
 void MenuItem::reset() {
@@ -370,6 +375,7 @@ MenuSystem::MenuSystem(
   _p_curr_menu(_p_root_menu),
   _renderer(renderer) {
   _p_root_menu->set_current(true);
+  _p_root_menu->set_focus(true);
 }
 
 bool MenuSystem::next(bool loop) {
@@ -387,31 +393,36 @@ bool MenuSystem::prev(bool loop) {
 }
 
 void MenuSystem::reset() {
-    _p_curr_menu = _p_root_menu;
-    _p_root_menu->reset();
+  // go to root menu
+  _p_curr_menu->reset();
+  _p_curr_menu->set_focus(false);
+  _p_curr_menu = _p_root_menu;
+  _p_root_menu->reset();
+  _p_root_menu->set_focus(true);
 }
 
-void MenuSystem::select(bool reset) {
-    Menu* pMenu = _p_curr_menu->activate();
+void MenuSystem::select() {
+    Menu* pMenu = _p_curr_menu->activate_menucomponent();
 
     if (pMenu != nullptr)
         _p_curr_menu = pMenu;
-    else
-        if (reset)
-            this->reset();
 }
 
 bool MenuSystem::back() {
   // Deactivate current component if it has focus
   if (_p_curr_menu->_p_current_component->has_focus()){
-      _p_curr_menu->_p_current_component->_has_focus = false;
-      return true;
+    _p_curr_menu->_p_current_component->set_focus(false);
+    return true;
   }
   // Go 1 level up if no component was active
   // and reset current menu
   if (_p_curr_menu != _p_root_menu){
+    // reset the items in the current menu and deactivate it
     _p_curr_menu->reset();
+    _p_curr_menu->set_focus(false);
+    // activate the parent menu
     _p_curr_menu = const_cast<Menu*>(_p_curr_menu->get_parent());
+    _p_curr_menu->set_focus(true);
     return true;
   }
 

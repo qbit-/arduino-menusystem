@@ -185,6 +185,13 @@ protected:
     //! \see is_current
     void set_current(bool is_current=true);
 
+    //! \brief Set the focus of the component
+    //!
+    //! \paran has_focus true if this component is active; false
+    //!                   otherwise.
+    //! \see is_current
+    void set_focus(bool has_focus=true);
+
 protected:
     const char* _name;
     bool _has_focus;
@@ -356,10 +363,10 @@ protected:
 
     //! \brief Activates the current selection
     //!
-    //! When a client makes a selection, activate is called
+    //! When a client makes a selection, activate_menucomponent is called
     //! on the current menu
     //! which in turn calls the menu's current item's callback.
-    Menu* activate();
+    Menu* activate_menucomponent();
 
     //! \copydoc MenuComponent::next
     virtual bool next(bool loop=false);
@@ -392,9 +399,9 @@ public:
     void display() const;
     bool next(bool loop=false);
     bool prev(bool loop=false);
-    void reset();
-    void select(bool reset=false);
+    void select();
     bool back();
+    void reset();
 
     Menu& get_root_menu() const;
     Menu const* get_current_menu() const;
