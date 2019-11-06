@@ -154,10 +154,10 @@ void Menu::add_menu(Menu* p_menu) {
 
 void Menu::add_component(MenuComponent* p_component) {
     // Resize menu component list, keeping existing items.
-    // If it fails, there the item is not added and the function returns.
+    // If it fails, then the item is not added and the function returns.
     _menu_components = (MenuComponent**) realloc(_menu_components,
-                                                 (_num_components + 1)
-                                                 * sizeof(MenuComponent*));
+                                                (_num_components + 1)
+                                                * sizeof(MenuComponent*));
     if (_menu_components == nullptr)
       return;
 
@@ -200,7 +200,7 @@ uint8_t Menu::get_previous_component_num() const {
 }
 
 void Menu::render(MenuComponentRenderer const& renderer) const {
-    renderer.render_menu(*this);
+    renderer.render(*this);
 }
 
 // *********************************************************
@@ -224,7 +224,7 @@ Menu* BackMenuItem::select() {
 }
 
 void BackMenuItem::render(MenuComponentRenderer const& renderer) const {
-    renderer.render_back_menu_item(*this);
+    renderer.render(*this);
 }
 
 // *********************************************************
@@ -245,7 +245,7 @@ void MenuItem::reset() {
 }
 
 void MenuItem::render(MenuComponentRenderer const& renderer) const {
-    renderer.render_menu_item(*this);
+    renderer.render(*this);
 }
 
 bool MenuItem::next(bool loop) {
@@ -268,16 +268,16 @@ void MenuItem::set_parent(Menu* p_parent) {
 // NumericMenuItem
 // *********************************************************
 
-NumericMenuItem::NumericMenuItem(const char* basename, SelectFnPtr select_fn,
-                                 float value, float min_value, float max_value,
-                                 float increment,
-                                 FormatValueFnPtr format_value_fn)
-: MenuItem(basename, select_fn),
-  _value(value),
-  _min_value(min_value),
-  _max_value(max_value),
-  _increment(increment),
-  _format_value_fn(format_value_fn) {
+NumericMenuItem::NumericMenuItem(
+   const char* basename, SelectFnPtr select_fn,
+   float value, float min_value, float max_value,
+   float increment,
+   FormatValueFnPtr format_value_fn): MenuItem(basename, select_fn),
+				      _value(value),
+				      _min_value(min_value),
+				      _max_value(max_value),
+				      _increment(increment),
+				      _format_value_fn(format_value_fn){
     if (_increment < 0.0) _increment = -_increment;
     if (_min_value > _max_value) {
         float tmp = _max_value;
@@ -286,8 +286,9 @@ NumericMenuItem::NumericMenuItem(const char* basename, SelectFnPtr select_fn,
     }
 };
 
-void NumericMenuItem::set_number_formatter(FormatValueFnPtr format_value_fn) {
-    _format_value_fn = format_value_fn;
+void NumericMenuItem::set_number_formatter(
+  FormatValueFnPtr format_value_fn){
+  _format_value_fn = format_value_fn;
 }
 
 Menu* NumericMenuItem::select() {
@@ -299,8 +300,9 @@ Menu* NumericMenuItem::select() {
     return nullptr;
 }
 
-void NumericMenuItem::render(MenuComponentRenderer const& renderer) const {
-    renderer.render_numeric_menu_item(*this);
+void NumericMenuItem::render(
+    MenuComponentRenderer const& renderer) const {
+    renderer.render(*this);
 }
 
 float NumericMenuItem::get_value() const {
@@ -362,10 +364,12 @@ bool NumericMenuItem::prev(bool loop) {
 // MenuSystem
 // *********************************************************
 
-MenuSystem::MenuSystem(MenuComponentRenderer const& renderer, const char* name)
-: _p_root_menu(new Menu(name, nullptr)),
+MenuSystem::MenuSystem(
+  MenuComponentRenderer const& renderer, const char* name):
+  _p_root_menu(new Menu(name, nullptr)),
   _p_curr_menu(_p_root_menu),
   _renderer(renderer) {
+  _p_root_menu->set_current(true);
 }
 
 bool MenuSystem::next(bool loop) {
@@ -424,6 +428,10 @@ Menu const* MenuSystem::get_current_menu() const {
 }
 
 void MenuSystem::display() const {
-    if (_p_curr_menu != nullptr)
-        _renderer.render_menu(*_p_curr_menu);
+  if (_p_curr_menu != nullptr){
+        _renderer.render(*_p_curr_menu);
+  }
+  else{
+    _renderer.render(*_p_root_menu);
+  }
 }

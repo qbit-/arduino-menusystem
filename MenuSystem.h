@@ -14,14 +14,16 @@ class MenuComponentRenderer;
 class MenuSystem;
 
 //! \brief Abstract base class that represents a component in the menu
-//!
-//! This is the abstract base class for the main components used to build a
+//! This is the abstract base class for the main components used
+//! to build a
 //! menu structure: Menu and MenuItem.
 //!
-//! MenuComponent should not be used as a base class in clients. Instead use
+//! MenuComponent should not be used as a base class in clients.
+//! Instead use
 //! either Menu or MenuItem.
 //!
-//! MenuComponent is the `Component` part of the composite design pattern (see:
+//! MenuComponent is the `Component` part of the composite
+//! design pattern (see:
 //! https://en.wikipedia.org/wiki/Composite_pattern).
 //!
 //! \see Menu
@@ -37,13 +39,13 @@ public:
 
 public:
     //! \brief Construct a MenuComponent
-    //! \param[in] name The name of the menu component that is displayed in
-    //!                 clients.
+    //! \param[in] name The name of the menu component that is
+    //! displayed in clients.
     MenuComponent(const char* name, SelectFnPtr select_fn);
 
     //! \brief Set the component's name
-    //! \param[in] name The name of the menu component that is displayed in
-    //!                 clients.
+    //! \param[in] name The name of the menu component that is
+    //! displayed in clients.
     void set_name(const char* name);
 
     //! \brief Gets the component's name
@@ -52,13 +54,15 @@ public:
 
     //! \brief Renders the component using the given MenuComponentRenderer
     //!
-    //! This is the `accept` method in the visitor design pattern. It should
+    //! This is the `accept` method in the visitor design pattern.
+    //! It should
     //! call the appropriate method on the given MenuComponentRenderer for
-    //! rendering this type of component. This method should be called from the
+    //! rendering this type of component. This method should be called
+    //! from the
     //! MenuComponent::render method.
     //!
-    //! \param[in] renderer The MenuComponentRenderer to use to render this
-    //!                     component
+    //! \param[in] renderer The MenuComponentRenderer to use
+    //! to render this component
     //!
     //! \see MenuComponentRenderer
     virtual void render(MenuComponentRenderer const& renderer) const = 0;
@@ -67,11 +71,14 @@ public:
     //!
     //! A component has focus when the next and prev functions are able to
     //! change its state rather than navigate the menu structure. It's
-    //! primarily used in NumericMenuItem so next and prev change the value
+    //! primarily used in NumericMenuItem so next and prev
+    //! change the value
     //! associated with the component.
     //!
-    //! Subclasses should set _has_focus to true when this behaviour is desired
-    //! and reset it to false when it's no longer required. The usual place to
+    //! Subclasses should set _has_focus to true when this
+    //! behaviour is desired
+    //! and reset it to false when it's no longer required.
+    //! The usual place to
     //! do this is in the MenuComponent::select method.
     //!
     //! \returns true if this component has focus, false otherwise.
@@ -80,13 +87,15 @@ public:
     //! \see NumericMenuComponent
     bool has_focus() const;
 
-    //! \brief Returns true if this is the current component; false otherwise
+    //! \brief Returns true if this is the current component;
+    //! false otherwise
     //!
-    //! This bool registers if the component is the current selected component.
+    //! This bool registers if the component is the current
+    //! selected component.
     //!
     //! Subclasses should use set_current() when the component becomes
-    //! activated and use set_previous() once the component is no longer the
-    //! current component.
+    //! activated and use set_previous() once the component is
+    //! no longer the current component.
     //!
     //! \returns true if this component is the current component, false
     //!          otherwise.
@@ -104,14 +113,17 @@ protected:
     //! The behaviour of this function can differ depending on whether
     //! MenuComponent::has_focus returns true or false.
     //!
-    //! When MenuComponent::has_focus returns true, this method should change
-    //! some state in the component; when it returns false, this method should
+    //! When MenuComponent::has_focus returns true, this method
+    //! should change
+    //! some state in the component; when it returns false,
+    //! this method should
     //! navigate the menu structure.
     //!
-    //! \param[in] loop if true the action should loop around to the beginning
-    //!                 for finite ranges; otherwise overflow should be
-    //!                 prevented.
-    //! \returns true if the component processed the action, false otherwise.
+    //! \param[in] loop if true the action should
+    //! loop around to the beginning for finite ranges;
+    //! otherwise overflow should be prevented.
+    //! \returns true if the component processed the action,
+    //! false otherwise.
     //!
     //! \see MenuComponent::prev
     //! \see MenuComponent::has_focus
@@ -122,14 +134,17 @@ protected:
     //! The behaviour of this function can differ depending on whether
     //! MenuComponent::has_focus returns true or false.
     //!
-    //! When MenuComponent::has_focus returns true, this method should change
-    //! some state in the component; when it returns false, this method should
+    //! When MenuComponent::has_focus returns true,
+    //! this method should change
+    //! some state in the component; when it returns false,
+    //! this method should
     //! navigate the menu structure.
     //!
     //! \param[in] loop if true the action should loop around to the end
     //!                 for finite ranges; otherwise overflow should be
     //!                 prevented.
-    //! \returns true if the component processed the action, false otherwise.
+    //! \returns true if the component processed the action,
+    //! false otherwise.
     //!
     //! \see MenuComponent::next
     //! \see MenuComponent::has_focus
@@ -140,19 +155,23 @@ protected:
 
     //! \brief Processes the select action
     //!
-    //! When a menu component is selected by the client an action may need to
-    //! performed.
+    //! When a menu component is selected by the client
+    //! an action may need to performed.
     //!
-    //! If the component supports focus, this method is the recommended place
+    //! If the component supports focus, this method
+    //! is the recommended place
     //! set _has_focus to true so the MenuComponent::next and
-    //! MenuComponent::prev methods can be used to change some state in the
-    //! component.
+    //! MenuComponent::prev methods can be used to change some
+    //! state in the component.
     //!
-    //! The default implementation calls select_fn if it's not null. Components
-    //! that derive from this class must call their parent's implementation.
+    //! The default implementation calls select_fn if it's not null.
+    //! Components
+    //! that derive from this class must call their parent's
+    //! implementation.
     //!
     //! \returns The Menu instance selected or nullptr. The returned Menu
-    //!          instance is used in MenuSystem::activate to set the current
+    //!          instance is used in MenuSystem::activate to set
+    //!          the current
     //!          menu in the MenuSystem.
     //!
     //! \see MenuComponent::has_focus
@@ -185,7 +204,8 @@ protected:
 class MenuItem : public MenuComponent {
 public:
     //! \brief Construct a MenuItem
-    //! \param[in] name The name of the menu component that is displayed in
+    //! \param[in] name The name of the menu component that
+    //! is displayed in
     //!                 clients.
     //! \param[in] select_fn The function to call when the MenuItem is
     //!                      selected.
@@ -252,7 +272,8 @@ public:
     //! Constructor
     //!
     //! @param name The name of the menu item.
-    //! @param select_fn The function to call when this MenuItem is selected.
+    //! @param select_fn The function to call when this
+    //! MenuItem is selected.
     //! @param value Default value.
     //! @param min_value The minimum value.
     //! @param max_value The maximum value.
@@ -267,7 +288,8 @@ public:
     //!
     //! \brief Sets the custom number formatter.
     //!
-    //! \param numberFormat the custom formatter. If nullptr the string float
+    //! \param numberFormat the custom formatter. If nullptr
+    //! the string float
     //!                     formatter will be used (2 decimals)
     //!
     void set_number_formatter(FormatValueFnPtr format_value_fn);
@@ -334,7 +356,8 @@ protected:
 
     //! \brief Activates the current selection
     //!
-    //! When a client makes a selection, activate is called on the current menu
+    //! When a client makes a selection, activate is called
+    //! on the current menu
     //! which in turn calls the menu's current item's callback.
     Menu* activate();
 
@@ -385,12 +408,10 @@ private:
 
 class MenuComponentRenderer {
 public:
-  //virtual void render(Menu const& menu) const = 0;
-
-    virtual void render_menu_item(MenuItem const& menu_item) const = 0;
-    virtual void render_back_menu_item(BackMenuItem const& menu_item) const = 0;
-    virtual void render_numeric_menu_item(NumericMenuItem const& menu_item) const = 0;
-    virtual void render_menu(Menu const& menu) const = 0;
+    virtual void render(MenuItem const& menu_item) const = 0;
+    virtual void render(BackMenuItem const& menu_item) const = 0;
+    virtual void render(NumericMenuItem const& menu_item) const = 0;
+    virtual void render(Menu const& menu) const = 0;
 };
 
 
