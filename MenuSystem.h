@@ -385,7 +385,7 @@ private:
 
 class MenuComponentRenderer {
 public:
-    virtual void render(Menu const& menu) const = 0;
+  //virtual void render(Menu const& menu) const = 0;
 
     virtual void render_menu_item(MenuItem const& menu_item) const = 0;
     virtual void render_back_menu_item(BackMenuItem const& menu_item) const = 0;

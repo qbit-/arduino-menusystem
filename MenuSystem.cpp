@@ -425,5 +425,5 @@ Menu const* MenuSystem::get_current_menu() const {
 
 void MenuSystem::display() const {
     if (_p_curr_menu != nullptr)
-        _renderer.render(*_p_curr_menu);
+        _renderer.render_menu(*_p_curr_menu);
 }
