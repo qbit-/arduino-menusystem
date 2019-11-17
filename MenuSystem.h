@@ -32,16 +32,16 @@ class MenuComponent {
     friend class MenuSystem;
     friend class Menu;
 public:
-    //! \brief Callback for when the MenuComponent is selected
+    //! \brief Callback for when the MenuComponent is activated
     //!
-    //! \param menu_component The menu component being selected.
-    using SelectFnPtr = void (*)(MenuComponent* menu_component);
+    //! \param menu_component The menu component being activated.
+    using ComponentCbPtr = void (*)(MenuComponent* menu_component);
 
 public:
     //! \brief Construct a MenuComponent
     //! \param[in] name The name of the menu component that is
     //! displayed in clients.
-    MenuComponent(const char* name, SelectFnPtr select_fn);
+  MenuComponent(const char* name, ComponentCbPtr on_activate, ComponentCbPtr on_current);
 
     //! \brief Set the component's name
     //! \param[in] name The name of the menu component that is
@@ -75,23 +75,23 @@ public:
     //! change the value
     //! associated with the component.
     //!
-    //! Subclasses should set _has_focus to true when this
+    //! Subclasses should set _is_active to true when this
     //! behaviour is desired
     //! and reset it to false when it's no longer required.
     //! The usual place to
-    //! do this is in the MenuComponent::select method.
+    //! do this is in the MenuComponent::activate method.
     //!
     //! \returns true if this component has focus, false otherwise.
     //!
-    //! \see MenuComponent::select
+    //! \see MenuComponent::activate
     //! \see NumericMenuComponent
-    bool has_focus() const;
+    bool is_active() const;
 
     //! \brief Returns true if this is the current component;
     //! false otherwise
     //!
     //! This bool registers if the component is the current
-    //! selected component.
+    //! activateed component.
     //!
     //! Subclasses should use set_current() when the component becomes
     //! activated and use set_previous() once the component is
@@ -102,18 +102,30 @@ public:
     //! \see MenuComponent::set_current
     bool is_current() const;
 
-    //! \brief Sets the function to call when the MenuItem is selected
-    //! \param[in] select_fn The function to call when the MenuItem is
-    //!                      selected.
-    void set_select_function(SelectFnPtr select_fn);
+    //! \brief Sets the function to call when the MenuItem is activated
+    //! \param[in] on_activate The function to call when the MenuItem is
+    //!                      activated.
+    void set_on_activate_cb(ComponentCbPtr on_activate);
+
+    //! \brief Sets the function to call when the MenuItem
+    //! is getting current
+    //! \param[in] on_current The function to call when the MenuItem
+    //! becomes current.
+    void set_on_current_cb(ComponentCbPtr on_current);
+
+    //! Sets the parent of the current component
+    void set_parent(Menu* p_parent);
+
+    //! Returns pointer to the parent
+     Menu const* get_parent();
 
 protected:
     //! \brief Processes the next action
     //!
     //! The behaviour of this function can differ depending on whether
-    //! MenuComponent::has_focus returns true or false.
+    //! MenuComponent::is_active returns true or false.
     //!
-    //! When MenuComponent::has_focus returns true, this method
+    //! When MenuComponent::is_active returns true, this method
     //! should change
     //! some state in the component; when it returns false,
     //! this method should
@@ -126,15 +138,15 @@ protected:
     //! false otherwise.
     //!
     //! \see MenuComponent::prev
-    //! \see MenuComponent::has_focus
+    //! \see MenuComponent::is_active
     virtual bool next(bool loop=false) = 0;
 
     //! \brief Processes the prev action
     //!
     //! The behaviour of this function can differ depending on whether
-    //! MenuComponent::has_focus returns true or false.
+    //! MenuComponent::is_active returns true or false.
     //!
-    //! When MenuComponent::has_focus returns true,
+    //! When MenuComponent::is_active returns true,
     //! this method should change
     //! some state in the component; when it returns false,
     //! this method should
@@ -147,36 +159,36 @@ protected:
     //! false otherwise.
     //!
     //! \see MenuComponent::next
-    //! \see MenuComponent::has_focus
+    //! \see MenuComponent::is_active
     virtual bool prev(bool loop=false) = 0;
 
     //! \brief Resets the component to its initial state
     virtual void reset() = 0;
 
-    //! \brief Processes the select action
+    //! \brief Processes the activat action
     //!
-    //! When a menu component is selected by the client
+    //! When a menu component is activated by the client
     //! an action may need to performed.
     //!
     //! If the component supports focus, this method
     //! is the recommended place
-    //! set _has_focus to true so the MenuComponent::next and
+    //! set _is_active to true so the MenuComponent::next and
     //! MenuComponent::prev methods can be used to change some
     //! state in the component.
     //!
-    //! The default implementation calls select_fn if it's not null.
+    //! The default implementation calls on_activate if it's not null.
     //! Components
     //! that derive from this class must call their parent's
     //! implementation.
     //!
-    //! \returns The Menu instance selected or nullptr. The returned Menu
+    //! \returns The Menu instance activated or nullptr. The returned Menu
     //!          instance is used in MenuSystem::activate to set
     //!          the current
     //!          menu in the MenuSystem.
     //!
-    //! \see MenuComponent::has_focus
+    //! \see MenuComponent::is_active
     //! \see NumericMenuComponent
-    virtual Menu* select();
+    virtual Menu* activate();
 
     //! \brief Set the current state of the component
     //!
@@ -187,24 +199,26 @@ protected:
 
     //! \brief Set the focus of the component
     //!
-    //! \paran has_focus true if this component is active; false
+    //! \paran is_active true if this component is active; false
     //!                   otherwise.
     //! \see is_current
-    void set_focus(bool has_focus=true);
+    void set_active(bool is_active=true);
 
 protected:
     const char* _name;
-    bool _has_focus;
+    bool _is_active;
     bool _is_current;
-    SelectFnPtr _select_fn;
+    ComponentCbPtr _on_activate;
+    ComponentCbPtr _on_current;
+    Menu* _p_parent;
 };
 
 
-//! \brief A MenuComponent that calls a callback function when selected.
+//! \brief A MenuComponent that calls a callback function when activated.
 //!
 //! MenuItem represents the `Leaf` in the composite design pattern (see:
 //! https://en.wikipedia.org/wiki/Composite_pattern). When a MenuItem is
-//! selected, the user-defined MenuItem::_select_fn callback is called.
+//! activated, the user-defined MenuItem::_on_activate callback is called.
 //!
 //! \see MenuComponent
 //! \see Menu
@@ -214,18 +228,12 @@ public:
     //! \param[in] name The name of the menu component that
     //! is displayed in
     //!                 clients.
-    //! \param[in] select_fn The function to call when the MenuItem is
-    //!                      selected.
-    MenuItem(const char* name, SelectFnPtr select_fn);
+    //! \param[in] on_activate The function to call when the MenuItem is
+    //!                      activated.
+  MenuItem(const char* name, ComponentCbPtr on_activate=nullptr, ComponentCbPtr on_current=nullptr);
 
     //! \copydoc MenuComponent::render
     virtual void render(MenuComponentRenderer const& renderer) const;
-
-    //! \copydoc Menu:set_parent
-    void set_parent(Menu* p_parent);
-
-    //! \copydoc Menu:set_parent
-    Menu const* get_parent() const;
 
 protected:
     //! \copydoc MenuComponent::next
@@ -243,24 +251,24 @@ protected:
     //! This method does nothing in MenuItem.
     virtual void reset();
 
-    //! \copydoc MenuComponent:select
-    virtual Menu* select();
+    //! \copydoc MenuComponent:activate
+    virtual Menu* activate();
 
 private:
     Menu* _p_parent;
 };
 
 
-//! \brief A MenuItem that calls MenuSystem::back() when selected.
+//! \brief A MenuItem that calls MenuSystem::back() when activated.
 //! \see MenuItem
 class BackMenuItem : public MenuItem {
 public:
-    BackMenuItem(const char* name, SelectFnPtr select_fn, MenuSystem* ms);
+  BackMenuItem(const char* name, MenuSystem* ms, ComponentCbPtr on_activate=nullptr, ComponentCbPtr on_current=nullptr);
 
     virtual void render(MenuComponentRenderer const& renderer) const;
 
 protected:
-    virtual Menu* select();
+    virtual Menu* activate();
 
 protected:
     MenuSystem* _menu_system;
@@ -273,24 +281,26 @@ public:
     //!
     //! \param value The value to convert.
     //! \returns The string representation of value.
-  using FormatValueFnPtr = const string (*)(const float value);
+  using ValueCbPtr = const string (*)(const float value);
 
 public:
     //! Constructor
     //!
     //! @param name The name of the menu item.
-    //! @param select_fn The function to call when this
-    //! MenuItem is selected.
+    //! @param on_activate The function to call when this
+    //! MenuItem is activated.
     //! @param value Default value.
     //! @param min_value The minimum value.
     //! @param max_value The maximum value.
     //! @param increment How much the value should be incremented by.
     //! @param format_value_fn The custom formatter. If nullptr the string
     //!                        float formatter will be used.
-    NumericMenuItem(const char* name, SelectFnPtr select_fn,
+    NumericMenuItem(const char* name,
                     float value, float min_value, float max_value,
                     float increment=1.0,
-                    FormatValueFnPtr format_value_fn=nullptr);
+		    ComponentCbPtr on_activate=nullptr,
+		    ComponentCbPtr on_current=nullptr,
+                    ValueCbPtr format_value_fn=nullptr);
 
     //!
     //! \brief Sets the custom number formatter.
@@ -299,7 +309,7 @@ public:
     //! the string float
     //!                     formatter will be used (2 decimals)
     //!
-    void set_number_formatter(FormatValueFnPtr format_value_fn);
+    void set_number_formatter(ValueCbPtr format_value_fn);
 
     float get_value() const;
     float get_min_value() const;
@@ -317,14 +327,14 @@ protected:
     virtual bool next(bool loop=false);
     virtual bool prev(bool loop=false);
 
-    virtual Menu* select();
+    virtual Menu* activate();
 
 protected:
     float _value;
     float _min_value;
     float _max_value;
     float _increment;
-    FormatValueFnPtr _format_value_fn;
+    ValueCbPtr _format_value_fn;
 };
 
 
@@ -332,20 +342,17 @@ protected:
 //!
 //! Menu represents the branch in the composite design pattern (see:
 //! https://en.wikipedia.org/wiki/Composite_pattern). When a Menu is
-//! selected, the user-defined Menu::_select_fn callback is called.
+//! activated, the user-defined Menu::_on_activate callback is called.
 //!
 //! \see MenuComponent
 //! \see MenuItem
 class Menu : public MenuComponent {
     friend class MenuSystem;
 public:
-    Menu(const char* name, SelectFnPtr select_fn=nullptr);
+  Menu(const char* name, ComponentCbPtr on_activate=nullptr, ComponentCbPtr on_current=nullptr);
 
     //! \brief Adds a MenuItem to the Menu
-    void add_item(MenuItem* p_item);
-
-    //! \brief Adds a Menu to the Menu
-    void add_menu(Menu* p_menu);
+    void add(MenuComponent* p_item);
 
     MenuComponent const* get_current_component() const;
     MenuComponent const* get_menu_component(uint8_t index) const;
@@ -358,8 +365,6 @@ public:
     void render(MenuComponentRenderer const& renderer) const;
 
 protected:
-    void set_parent(Menu* p_parent);
-    Menu const* get_parent() const;
 
     //! \brief Activates the current selection
     //!
@@ -374,13 +379,13 @@ protected:
     //! \copydoc MenuComponent::prev
     virtual bool prev(bool loop=false);
 
-    //! \copydoc MenuComponent::select
-    virtual Menu* select();
+    //! \copydoc MenuComponent::activate
+    virtual Menu* activate();
 
     //! \copydoc MenuComponent::reset
     virtual void reset();
 
-    void add_component(MenuComponent* p_component);
+    //void add_component(MenuComponent* p_component);
 
 private:
     MenuComponent* _p_current_component;
@@ -399,7 +404,7 @@ public:
     void display() const;
     bool next(bool loop=false);
     bool prev(bool loop=false);
-    void select();
+    void activate();
     bool back();
     void reset();
 

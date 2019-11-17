@@ -13,11 +13,12 @@ using namespace std;
 // MenuComponent
 // *********************************************************
 
-MenuComponent::MenuComponent(const char* name, SelectFnPtr select_fn)
+MenuComponent::MenuComponent(const char* name, ComponentCbPtr on_activate, ComponentCbPtr on_current)
 : _name(name),
-  _has_focus(false),
+  _is_active(false),
   _is_current(false),
-  _select_fn(select_fn) {
+  _on_activate(on_activate),
+  _on_current(on_current) {
 }
 
 const char* MenuComponent::get_name() const {
@@ -28,12 +29,12 @@ void MenuComponent::set_name(const char* name) {
     _name = name;
 }
 
-bool MenuComponent::has_focus() const {
-    return _has_focus;
+bool MenuComponent::is_active() const {
+    return _is_active;
 }
 
-void MenuComponent::set_focus(bool has_focus) {
-  _has_focus = has_focus;
+void MenuComponent::set_active(bool is_active) {
+  _is_active = is_active;
 }
 
 bool MenuComponent::is_current() const {
@@ -42,25 +43,39 @@ bool MenuComponent::is_current() const {
 
 void MenuComponent::set_current(bool is_current) {
     _is_current = is_current;
+    if (_is_current && _on_current != nullptr)
+      _on_current(this);
 }
 
-Menu* MenuComponent::select() {
-    if (_select_fn != nullptr)
-        _select_fn(this);
+Menu* MenuComponent::activate() {
+    if (_on_activate != nullptr)
+        _on_activate(this);
 
     return nullptr;
 }
 
-void MenuComponent::set_select_function(SelectFnPtr select_fn) {
-    _select_fn = select_fn;
+void MenuComponent::set_on_activate_cb(ComponentCbPtr on_activate) {
+    _on_activate = on_activate;
+}
+
+void MenuComponent::set_on_current_cb(ComponentCbPtr on_current) {
+    _on_current = on_current;
+}
+
+Menu const* MenuComponent::get_parent(){
+    return _p_parent;
+}
+
+void MenuComponent::set_parent(Menu* p_parent) {
+    _p_parent = p_parent;
 }
 
 // *********************************************************
 // Menu
 // *********************************************************
 
-Menu::Menu(const char* name, SelectFnPtr select_fn)
-: MenuComponent(name, select_fn),
+Menu::Menu(const char* name, ComponentCbPtr on_activate, ComponentCbPtr on_current)
+  : MenuComponent(name, on_activate, on_current),
   _p_current_component(nullptr),
   _menu_components(nullptr),
   _p_parent(nullptr),
@@ -127,36 +142,28 @@ Menu* Menu::activate_menucomponent() {
     if (pComponent == nullptr)
         return nullptr;
 
-    return pComponent->select();
+    return pComponent->activate();
 }
 
-Menu* Menu::select() {
-    MenuComponent::select();
-    this->set_focus(true);
+Menu* Menu::activate() {
+    MenuComponent::activate();
+    this->set_active(true);
     return this;
 }
 
 void Menu::reset() {
   // Makes first menuitem current
   _p_current_component->set_current(false);
-  _p_current_component->set_focus(false);
+  _p_current_component->set_active(false);
   _previous_component_num = 0;
   _current_component_num = 0;
   _p_current_component = _num_components ? _menu_components[0] : nullptr;
   _p_current_component->set_current();
 }
 
-void Menu::add_item(MenuItem* p_item) {
-    add_component((MenuComponent*) p_item);
-    p_item->set_parent(this);
-}
+// }
 
-void Menu::add_menu(Menu* p_menu) {
-    add_component((MenuComponent*) p_menu);
-    p_menu->set_parent(this);
-}
-
-void Menu::add_component(MenuComponent* p_component) {
+void Menu::add(MenuComponent* p_component) {
     // Resize menu component list, keeping existing items.
     // If it fails, then the item is not added and the function returns.
     _menu_components = (MenuComponent**) realloc(_menu_components,
@@ -169,18 +176,11 @@ void Menu::add_component(MenuComponent* p_component) {
 
     if (_num_components == 0) {
         _p_current_component = p_component;
-        _p_current_component->set_current();
+        _p_current_component->_is_current = true;
     }
 
     _num_components++;
-}
-
-Menu const* Menu::get_parent() const {
-    return _p_parent;
-}
-
-void Menu::set_parent(Menu* p_parent) {
-    _p_parent = p_parent;
+     p_component->set_parent(this);
 }
 
 MenuComponent const* Menu::get_menu_component(uint8_t index) const {
@@ -211,15 +211,14 @@ void Menu::render(MenuComponentRenderer const& renderer) const {
 // BackMenuItem
 // *********************************************************
 
-BackMenuItem::BackMenuItem(const char* name, SelectFnPtr select_fn,
-                           MenuSystem* ms)
-: MenuItem(name, select_fn),
+BackMenuItem::BackMenuItem(const char* name, MenuSystem* ms, ComponentCbPtr on_activate, ComponentCbPtr on_current)
+  : MenuItem(name, on_activate, on_current),
   _menu_system(ms) {
 }
 
-Menu* BackMenuItem::select() {
-    if (_select_fn!=nullptr)
-        _select_fn(this);
+Menu* BackMenuItem::activate() {
+    if (_on_activate!=nullptr)
+        _on_activate(this);
 
     if (_menu_system!=nullptr)
         _menu_system->back();
@@ -235,13 +234,13 @@ void BackMenuItem::render(MenuComponentRenderer const& renderer) const {
 // MenuItem
 // *********************************************************
 
-MenuItem::MenuItem(const char* name, SelectFnPtr select_fn)
-: MenuComponent(name, select_fn) {
+MenuItem::MenuItem(const char* name, ComponentCbPtr on_activate, ComponentCbPtr on_current)
+  : MenuComponent(name, on_activate, on_current) {
 }
 
-Menu* MenuItem::select() {
+Menu* MenuItem::activate() {
   // call attached function
-  MenuComponent::select();
+  MenuComponent::activate();
   return nullptr;
 }
 
@@ -261,23 +260,17 @@ bool MenuItem::prev(bool loop) {
     return false;
 }
 
-Menu const* MenuItem::get_parent() const {
-    return _p_parent;
-}
-
-void MenuItem::set_parent(Menu* p_parent) {
-    _p_parent = p_parent;
-}
-
 // *********************************************************
 // NumericMenuItem
 // *********************************************************
 
 NumericMenuItem::NumericMenuItem(
-   const char* basename, SelectFnPtr select_fn,
+   const char* basename,
    float value, float min_value, float max_value,
    float increment,
-   FormatValueFnPtr format_value_fn): MenuItem(basename, select_fn),
+   ComponentCbPtr on_activate,
+   ComponentCbPtr on_current,
+   ValueCbPtr format_value_fn): MenuItem(basename, on_activate, on_current),
 				      _value(value),
 				      _min_value(min_value),
 				      _max_value(max_value),
@@ -292,16 +285,16 @@ NumericMenuItem::NumericMenuItem(
 };
 
 void NumericMenuItem::set_number_formatter(
-  FormatValueFnPtr format_value_fn){
+  ValueCbPtr format_value_fn){
   _format_value_fn = format_value_fn;
 }
 
-Menu* NumericMenuItem::select() {
-    _has_focus = !_has_focus;
+Menu* NumericMenuItem::activate() {
+    _is_active = !_is_active;
 
-    // Only run _select_fn when the user is done editing the value
-    if (!_has_focus && _select_fn != nullptr)
-        _select_fn(this);
+    // Only run _on_activate when the user is done editing the value
+    if (!_is_active && _on_activate != nullptr)
+        _on_activate(this);
     return nullptr;
 }
 
@@ -375,18 +368,18 @@ MenuSystem::MenuSystem(
   _p_curr_menu(_p_root_menu),
   _renderer(renderer) {
   _p_root_menu->set_current(true);
-  _p_root_menu->set_focus(true);
+  _p_root_menu->set_active(true);
 }
 
 bool MenuSystem::next(bool loop) {
-    if (_p_curr_menu->_p_current_component->has_focus())
+    if (_p_curr_menu->_p_current_component->is_active())
         return _p_curr_menu->_p_current_component->next(loop);
     else
         return _p_curr_menu->next(loop);
 }
 
 bool MenuSystem::prev(bool loop) {
-    if (_p_curr_menu->_p_current_component->has_focus())
+    if (_p_curr_menu->_p_current_component->is_active())
         return _p_curr_menu->_p_current_component->prev(loop);
     else
         return _p_curr_menu->prev(loop);
@@ -395,13 +388,13 @@ bool MenuSystem::prev(bool loop) {
 void MenuSystem::reset() {
   // go to root menu
   _p_curr_menu->reset();
-  _p_curr_menu->set_focus(false);
+  _p_curr_menu->set_active(false);
   _p_curr_menu = _p_root_menu;
   _p_root_menu->reset();
-  _p_root_menu->set_focus(true);
+  _p_root_menu->set_active(true);
 }
 
-void MenuSystem::select() {
+void MenuSystem::activate() {
     Menu* pMenu = _p_curr_menu->activate_menucomponent();
 
     if (pMenu != nullptr)
@@ -410,8 +403,8 @@ void MenuSystem::select() {
 
 bool MenuSystem::back() {
   // Deactivate current component if it has focus
-  if (_p_curr_menu->_p_current_component->has_focus()){
-    _p_curr_menu->_p_current_component->set_focus(false);
+  if (_p_curr_menu->_p_current_component->is_active()){
+    _p_curr_menu->_p_current_component->set_active(false);
     return true;
   }
   // Go 1 level up if no component was active
@@ -419,10 +412,10 @@ bool MenuSystem::back() {
   if (_p_curr_menu != _p_root_menu){
     // reset the items in the current menu and deactivate it
     _p_curr_menu->reset();
-    _p_curr_menu->set_focus(false);
+    _p_curr_menu->set_active(false);
     // activate the parent menu
-    _p_curr_menu = const_cast<Menu*>(_p_curr_menu->get_parent());
-    _p_curr_menu->set_focus(true);
+    _p_curr_menu = const_cast<Menu *>(_p_curr_menu->get_parent());
+    _p_curr_menu->set_active(true);
     return true;
   }
 
