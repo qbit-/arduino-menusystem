@@ -18,7 +18,8 @@ MenuComponent::MenuComponent(const char* name, ComponentCbPtr on_activate, Compo
   _is_active(false),
   _is_current(false),
   _on_activate(on_activate),
-  _on_current(on_current) {
+  _on_current(on_current),
+  _p_parent(nullptr){
 }
 
 const char* MenuComponent::get_name() const {
@@ -78,7 +79,6 @@ Menu::Menu(const char* name, ComponentCbPtr on_activate, ComponentCbPtr on_curre
   : MenuComponent(name, on_activate, on_current),
   _p_current_component(nullptr),
   _menu_components(nullptr),
-  _p_parent(nullptr),
   _num_components(0),
   _current_component_num(0),
   _previous_component_num(0) {
@@ -148,17 +148,24 @@ Menu* Menu::activate_menucomponent() {
 Menu* Menu::activate() {
     MenuComponent::activate();
     this->set_active(true);
+    _p_current_component = _num_components ? _menu_components[0] : nullptr;
+    if (_p_current_component)
+      _p_current_component->set_current();
     return this;
 }
 
 void Menu::reset() {
   // Makes first menuitem current
-  _p_current_component->set_current(false);
-  _p_current_component->set_active(false);
+  if(_p_current_component){
+    _p_current_component->set_current(false);
+    _p_current_component->set_active(false);
+  }
   _previous_component_num = 0;
   _current_component_num = 0;
   _p_current_component = _num_components ? _menu_components[0] : nullptr;
-  _p_current_component->set_current();
+  if (this->is_active() && _p_current_component){
+    _p_current_component->set_current();
+  }
 }
 
 // }
@@ -174,13 +181,13 @@ void Menu::add(MenuComponent* p_component) {
 
     _menu_components[_num_components] = p_component;
 
-    if (_num_components == 0) {
-        _p_current_component = p_component;
-        _p_current_component->_is_current = true;
-    }
+    // if (_num_components == 0) {
+    //   _p_current_component = p_component;
+    //   _p_current_component->_is_current = true;
+    // }
 
     _num_components++;
-     p_component->set_parent(this);
+    p_component->set_parent(this);
 }
 
 MenuComponent const* Menu::get_menu_component(uint8_t index) const {
@@ -365,57 +372,57 @@ bool NumericMenuItem::prev(bool loop) {
 MenuSystem::MenuSystem(
   MenuComponentRenderer const& renderer, const char* name):
   _p_root_menu(new Menu(name, nullptr)),
-  _p_curr_menu(_p_root_menu),
+  _p_current_menu(_p_root_menu),
   _renderer(renderer) {
   _p_root_menu->set_current(true);
   _p_root_menu->set_active(true);
 }
 
 bool MenuSystem::next(bool loop) {
-    if (_p_curr_menu->_p_current_component->is_active())
-        return _p_curr_menu->_p_current_component->next(loop);
+    if (_p_current_menu->_p_current_component->is_active())
+        return _p_current_menu->_p_current_component->next(loop);
     else
-        return _p_curr_menu->next(loop);
+        return _p_current_menu->next(loop);
 }
 
 bool MenuSystem::prev(bool loop) {
-    if (_p_curr_menu->_p_current_component->is_active())
-        return _p_curr_menu->_p_current_component->prev(loop);
+    if (_p_current_menu->_p_current_component->is_active())
+        return _p_current_menu->_p_current_component->prev(loop);
     else
-        return _p_curr_menu->prev(loop);
+        return _p_current_menu->prev(loop);
 }
 
 void MenuSystem::reset() {
   // go to root menu
-  _p_curr_menu->reset();
-  _p_curr_menu->set_active(false);
-  _p_curr_menu = _p_root_menu;
-  _p_root_menu->reset();
+  _p_current_menu->set_active(false);
+  _p_current_menu->reset();
+  _p_current_menu = _p_root_menu;
   _p_root_menu->set_active(true);
+  _p_root_menu->reset();
 }
 
 void MenuSystem::activate() {
-    Menu* pMenu = _p_curr_menu->activate_menucomponent();
+    Menu* pMenu = _p_current_menu->activate_menucomponent();
 
     if (pMenu != nullptr)
-        _p_curr_menu = pMenu;
+        _p_current_menu = pMenu;
 }
 
 bool MenuSystem::back() {
   // Deactivate current component if it has focus
-  if (_p_curr_menu->_p_current_component->is_active()){
-    _p_curr_menu->_p_current_component->set_active(false);
+  if (_p_current_menu->_p_current_component->is_active()){
+    _p_current_menu->_p_current_component->set_active(false);
     return true;
   }
   // Go 1 level up if no component was active
   // and reset current menu
-  if (_p_curr_menu != _p_root_menu){
+  if (_p_current_menu != _p_root_menu){
     // reset the items in the current menu and deactivate it
-    _p_curr_menu->reset();
-    _p_curr_menu->set_active(false);
+    _p_current_menu->set_active(false);
+    _p_current_menu->reset();
     // activate the parent menu
-    _p_curr_menu = const_cast<Menu *>(_p_curr_menu->get_parent());
-    _p_curr_menu->set_active(true);
+    _p_current_menu = const_cast<Menu *>(_p_current_menu->get_parent());
+    _p_current_menu->set_active(true);
     return true;
   }
 
@@ -428,12 +435,12 @@ Menu& MenuSystem::get_root_menu() const {
 }
 
 Menu const* MenuSystem::get_current_menu() const {
-    return _p_curr_menu;
+    return _p_current_menu;
 }
 
 void MenuSystem::display() const {
-  if (_p_curr_menu != nullptr){
-        _renderer.render(*_p_curr_menu);
+  if (_p_current_menu != nullptr){
+    _renderer.render(*_p_current_menu);
   }
   else{
     _renderer.render(*_p_root_menu);

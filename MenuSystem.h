@@ -253,9 +253,6 @@ protected:
 
     //! \copydoc MenuComponent:activate
     virtual Menu* activate();
-
-private:
-    Menu* _p_parent;
 };
 
 
@@ -390,7 +387,6 @@ protected:
 private:
     MenuComponent* _p_current_component;
     MenuComponent** _menu_components;
-    Menu* _p_parent;
     uint8_t _num_components;
     uint8_t _current_component_num;
     uint8_t _previous_component_num;
@@ -413,7 +409,7 @@ public:
 
 private:
     Menu* _p_root_menu;
-    Menu* _p_curr_menu;
+    Menu* _p_current_menu;
     MenuComponentRenderer const& _renderer;
 };
 
